@@ -14,7 +14,7 @@ namespace ExcelHandler
         public DataTable RawDataTable;
         public DataTableBuilder NcmDataTable;
         public ExcelFileBuilder NcmExcelFile;
-        public ExcelHeaderConfig RawExcelHeader = new ExcelHeaderConfig();
+        public ExcelHeaderConfig RawExcelHeader = ExcelHeaderConfig.GetInstance();
         public XmlDictHelper ConfigXml;
         public string ConfigFilePath;
         public List<string> ListofInstinctProductName = new List<string>();

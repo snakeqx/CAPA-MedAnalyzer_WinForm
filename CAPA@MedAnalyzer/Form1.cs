@@ -24,6 +24,7 @@ namespace CAPA_MedAnalyzer
         private DataTable TableNcmWeeklyGeneral;
         private DataTable TableNcmWeeklyDetail;
         private string HeaderChartFPy = "FPY";
+        private ExcelHeaderConfig RawExcelHeader = ExcelHeaderConfig.GetInstance();
 
         #region Initilization
         public Form1()
@@ -84,6 +85,7 @@ namespace CAPA_MedAnalyzer
             BtnCalculateFPY.Enabled = true;
             exportExcelToolStripMenuItem.Enabled = true;
             BtnCheckWeeklyNcm.Enabled = true;
+            excelHeaderConfigurationToolStripMenuItem.Enabled = false;
         }
 
         private void exportExcelToolStripMenuItem_Click(object sender, EventArgs e)
@@ -236,14 +238,10 @@ namespace CAPA_MedAnalyzer
 
         private void excelHeaderConfigurationToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            StringBuilder temp = new StringBuilder();
-            foreach(string i in Ncm.GetExcelHeaderConfigProperties())
-            {
-                temp.Append(i + '\n');
-            }
-            MessageBox.Show(temp.ToString());
+            Form2 fm = new Form2();
+            fm.ShowDialog();
+            
         }
-        #endregion
 
         #region Deal With Click On DataGridView
         private void DgwConfig_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -297,16 +295,12 @@ namespace CAPA_MedAnalyzer
         {
             e.Cancel = true;
         }
-
-
+        #endregion
         #endregion
 
-        #region Helper functions
-        private void ShowFpyChart(DataTable dt)
-        {
-            
-        }
 
+
+        #region Helper functions
         private Tuple<List<string>, List<double>> GetFpyData()
         {
             List<string> chartName = new List<string>();
