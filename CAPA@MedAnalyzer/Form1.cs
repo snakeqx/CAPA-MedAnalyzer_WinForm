@@ -27,24 +27,16 @@ namespace CAPA_MedAnalyzer
 
         #region Initilization
         public Form1()
-        {
+        {  
+            InitializeComponent();
+
             CurrentPath = Application.StartupPath;
             ConfigFilePath = CurrentPath + @"/Config.xml";
-            InitializeComponent();
-            TbLog.Text = "Log Start!\r\n";
 
+            TbLog.Text = "Log Start!\r\n";
             DtpWeeklyNcm.Value = DateTime.Now.AddDays(-8);
-            
-            if (DateTime.Now.Month != 1)
-            {
-                TbMonth.Text = (DateTime.Now.Month-1).ToString();
-                TbYear.Text = DateTime.Now.Year.ToString();
-            }
-            else
-            {
-                TbMonth.Text = "12";
-                TbYear.Text = (DateTime.Now.Year-1).ToString();
-            }
+            TbMonth.Text = DateTime.Now.AddMonths(-1).Month.ToString();
+            TbYear.Text = DateTime.Now.AddMonths(-1).Year.ToString();
             BtnCalculateFPY.Enabled = false;
             exportExcelToolStripMenuItem.Enabled = false;
             BtnCheckWeeklyNcm.Enabled = false;
@@ -118,17 +110,33 @@ namespace CAPA_MedAnalyzer
 
         private void BtnCalculateFPY_Click(object sender, EventArgs e)
         {
+            DataTable dt = null;
             try
             {
-                Ncm.MatchProductName();
+                if (!Ncm.MatchProductName())
+                {
+                    MessageBox.Show("Table is still not initialized, Maybe there is some System has no Union Name.");
+                    return;
+                }
                 int year = int.Parse(TbYear.Text);
                 int month = int.Parse(TbMonth.Text);
-                ShowFpyChart(Ncm.AnalyzeFPY4SingleMonth(year, month));
+                //ShowFpyChart(Ncm.AnalyzeFPY4SingleMonth(year, month));
+                dt = Ncm.AnalyzeFPY4SingleMonth(year, month);
+                TableFpy = dt.Copy();
             }
             catch(Exception ex)
             {
                 MessageBox.Show(ex.Message + " For Year and Month");
             }
+
+            
+            DgvFpy.DataSource = TableFpy;
+            DgvFpy.AutoResizeColumns();
+
+            ChartFpy.BackColor = Color.Azure;
+            ChartFpy.Series[HeaderChartFPy].Points.DataBindXY(GetFpyData().Item1, GetFpyData().Item2);
+            ChartFpy.Series[HeaderChartFPy].ChartType = SeriesChartType.Bar;
+            TabControlMain.SelectTab(1);
         }
 
         private void BtnProductNcmDetail_Click(object sender, EventArgs e)
@@ -144,9 +152,22 @@ namespace CAPA_MedAnalyzer
             // Use below 2 lines to get the correct index
             // line 1: to get the whole row data from the datagridview
             // line 2: search the line in original datatable to get the correct index
+            int year;
+            int month;
+            try
+            {
+                year = int.Parse(TbYear.Text);
+                month = int.Parse(TbMonth.Text);
+            }
+            catch (Exception ex)
+            {
+                throw (ex);
+            }
+
             DataRowView drv = DgvFpy.SelectedRows[0].DataBoundItem as DataRowView;
             int selectedRow = TableFpy.Rows.IndexOf(drv.Row);
-            TableProductNcmDetail = Ncm.GetProductNcmDetail(TableFpy.Rows[selectedRow][Ncm.ExHdSystemUnionName].ToString()).Copy();
+            TableProductNcmDetail = Ncm.GetProductNcmDetail(TableFpy.Rows[selectedRow][Ncm.ExHdSystemUnionName].ToString(),
+                                                            year, month).Copy();
             DgvProductNcmDetail.DataSource = TableProductNcmDetail;
             DgvProductNcmDetail.AutoResizeColumns();
             TabControlMain.SelectTab(2);
@@ -224,44 +245,6 @@ namespace CAPA_MedAnalyzer
         }
         #endregion
 
-        #region Helper functions
-        private void ShowFpyChart(DataTable dt)
-        {
-            TableFpy = dt.Copy();
-            DgvFpy.DataSource = TableFpy;
-            DgvFpy.AutoResizeColumns();
-
-            ChartFpy.BackColor = Color.Azure;
-            ChartFpy.Series[HeaderChartFPy].Points.DataBindXY(GetFpyData().Item1, GetFpyData().Item2);
-            ChartFpy.Series[HeaderChartFPy].ChartType = SeriesChartType.Bar;
-            TabControlMain.SelectTab(1);
-        }
-
-        private Tuple<List<string>, List<double>> GetFpyData()
-        {
-            List<string> chartName = new List<string>();
-            List<double> chartFpy = new List<double>();
-
-            foreach (DataRow r in TableFpy.Rows)
-            {
-                try
-                {
-                    chartName.Add(r[Ncm.ExHdSystemUnionName].ToString());
-                    chartFpy.Add(double.Parse(r[Ncm.HdFpy].ToString()));
-                }
-                catch (Exception ex)
-                {
-                    chartName.Add("Error");
-                    chartFpy.Add(1.00);
-                    MessageBox.Show(ex.Message.ToString());
-                }
-
-            }
-            Tuple<List<string>, List<double>> result = new Tuple<List<string>, List<double>>(chartName, chartFpy);
-            return result;
-        }
-        #endregion
-
         #region Deal With Click On DataGridView
         private void DgwConfig_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
@@ -284,7 +267,7 @@ namespace CAPA_MedAnalyzer
             {
                 try
                 {
-                    r[Ncm.HdFpy] = Math.Round(double.Parse(r[Ncm.HdQtyWithNcm].ToString()) / 
+                    r[Ncm.HdFpy] = Math.Round(double.Parse(r[Ncm.HdQtyWithNcm].ToString()) /
                                               double.Parse(r[Ncm.HdTotalSysQty].ToString()),
                                               4);
                 }
@@ -317,6 +300,39 @@ namespace CAPA_MedAnalyzer
 
 
         #endregion
+
+        #region Helper functions
+        private void ShowFpyChart(DataTable dt)
+        {
+            
+        }
+
+        private Tuple<List<string>, List<double>> GetFpyData()
+        {
+            List<string> chartName = new List<string>();
+            List<double> chartFpy = new List<double>();
+
+            foreach (DataRow r in TableFpy.Rows)
+            {
+                try
+                {
+                    chartName.Add(r[Ncm.ExHdSystemUnionName].ToString());
+                    chartFpy.Add(double.Parse(r[Ncm.HdFpy].ToString()));
+                }
+                catch (Exception ex)
+                {
+                    chartName.Add("Error");
+                    chartFpy.Add(1.00);
+                    MessageBox.Show(ex.Message.ToString());
+                }
+
+            }
+            Tuple<List<string>, List<double>> result = new Tuple<List<string>, List<double>>(chartName, chartFpy);
+            return result;
+        }
+        #endregion
+
+        
 
 
     }// end of class

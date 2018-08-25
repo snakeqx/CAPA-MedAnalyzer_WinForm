@@ -80,6 +80,25 @@ namespace ExcelHandler
         }
 
         /// <summary>
+        /// Add the new column of System Union Name according to config
+        /// If the Column has been existing, remove the column first
+        /// </summary>
+        /// <returns>True: Success; false: Not success. E.g. There is a new name not found in the config</returns>
+        public bool MatchProductName()
+        {
+            if (CheckIfNewNameInExcel()) return false;
+            // if the System Union Name column has been there, remove it first
+            if (NcmDataTable.Table.Columns.Contains(ExHdSystemUnionName))
+                NcmDataTable.Table.Columns.Remove(NcmDataTable.Table.Columns[ExHdSystemUnionName]);
+            NcmDataTable.Table.Columns.Add(ExHdSystemUnionName, typeof(System.String));
+            // r is a reference, so changing r will change the original data also
+            foreach (DataRow r in NcmDataTable.Table.Rows)
+                r[ExHdSystemUnionName] = ConfigXml.Names[r[ExHdSystemDescriptionNormalized].ToString()];
+            IsInitDone = true;
+            return true;
+        }
+
+        /// <summary>
         /// ExcelFileBuilder constructor wrapper
         /// </summary>
         /// <param name="filePath">The excel file name to be saved.</param>
@@ -168,9 +187,10 @@ namespace ExcelHandler
         /// </summary>
         /// <param name="sysUnionName">The System Union Name</param>
         /// <returns></returns>
-        public DataTable GetProductNcmDetail(string sysUnionName)
+        public DataTable GetProductNcmDetail(string sysUnionName, int year, int month)
         {
             if (!IsInitDone) throw new Exception("Data is not initialized. Maybe found new systerm type.");
+            double fMonth = year + 0.01 * month;
             DataTable resultTable = new DataTable("Product NCM detail");
             resultTable.Columns.Add(HdId, typeof(System.Int32));
             resultTable.Columns.Add(ExHdSystemUnionName, typeof(System.String));
@@ -200,7 +220,8 @@ namespace ExcelHandler
             Dictionary<string, int> count = new Dictionary<string, int>();
             // 1st, Generate a datatable only has the "productName"
             DataTable dt = (from x in NcmDataTable.Table.AsEnumerable()
-                            where x.Field<string>(ExHdSystemUnionName) == sysUnionName
+                            where x.Field<string>(ExHdSystemUnionName) == sysUnionName &&
+                                  x.Field<double>(ExHdMonth) == fMonth
                             select x).CopyToDataTable();
 
             // 2nd, Get distinct material name and count in the same time
@@ -391,23 +412,7 @@ namespace ExcelHandler
             }
         }
 
-        /// <summary>
-        /// Add the new column of System Union Name according to config
-        /// If the Column has been existing, remove the column first
-        /// </summary>
-        /// <returns>True: Success; false: Not success. E.g. There is a new name not found in the config</returns>
-        public bool MatchProductName()
-        {
-            if (CheckIfNewNameInExcel()) return false;
-            // if the System Union Name column has been there, remove it first
-            if (NcmDataTable.Table.Columns.Contains(ExHdSystemUnionName))
-                NcmDataTable.Table.Columns.Remove(NcmDataTable.Table.Columns[ExHdSystemUnionName]);
-            NcmDataTable.Table.Columns.Add(ExHdSystemUnionName, typeof(System.String));
-            // r is a reference, so changing r will change the original data also
-            foreach (DataRow r in NcmDataTable.Table.Rows)
-                r[ExHdSystemUnionName] = ConfigXml.Names[r[ExHdSystemDescriptionNormalized].ToString()];
-            return true;
-        }
+
 
         public List<string> GetExcelHeaderConfigProperties()
         {

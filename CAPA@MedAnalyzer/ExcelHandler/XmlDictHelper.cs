@@ -147,7 +147,8 @@ namespace ExcelHandler
             Names.Clear();
             foreach(DataRow row in dt.Rows)
             {
-                AddData(row[1].ToString(), row[2].ToString());
+                if (row[2].ToString().Trim() == "") continue;
+                AddData(row[1].ToString().ToUpper(), row[2].ToString().ToUpper());
             }
         }
         #endregion
