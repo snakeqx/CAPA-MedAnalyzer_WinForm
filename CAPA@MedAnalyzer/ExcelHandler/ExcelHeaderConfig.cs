@@ -18,39 +18,60 @@ namespace ExcelHandler
     {
         // The unique instance for this single instance class
         public static ExcelHeaderConfig Instance;
-        // Current solution is a fixed solutin and ugly
-        // maybe use reflection will be more elegant to be used.
-        // TODO()
 
-        // raw excel headers
+        // Fields: raw excel headers
+        #region unused headers
+        /////////////////////////////
         // the dimmed line are unused headers
         //public string EntryDate = "Entry date";
         //public string DeliveryDate = "Delivery date";
         //public string CloseDate = "Close date";
-        public string SourceId = "Source ID";
-        public string CreateDate = "Create date";
         //public string Reporter = "Reporter";
         //public string DefectivePartMaterialNumber = "Defective part material number";
-        public string DefectivePartDescription = "Defective part description";
         //public string DefectivePartSerialNumber = "Defective part serial number";
         //public string Supplier = "Supplier";
         //public string Suppliername = "Suppliername";
-        public string ProblemDescription = "Problem description";
         //public string FailureClassification = "PCategory";
         //public string Responsibility = "Responsibility";
-        public string Conclusion = "Conclusion";
         //public string ActionCodeFactor = "Action code factor";
         //public string FixTime = "Fix time (decimal)";
         //public string Creator = "Creator";
         //public string SystemMaterialNumber = "System material number";
-        public string SystemDescription = "System description";
         //public string SystemShortDescription = "System short description";
-        public string SystemSerialNumber = "System serial number";
         //public string ComponentMaterialNumber = "Component material number";
-        public string ComponentDescription = "Component description";
         //public string ComponentSerialNumber = "Component serial number";
         //public string Source = "Source";
         //public string FilwCount = "File count";
+        //////////////////////////////////
+        #endregion
+        private string sourceId = "Source ID";
+        private string createDate = "Create date";
+        private string defectivePartDescription = "Defective part description";
+        private string problemDescription = "Problem description";
+        private string conclusion = "Conclusion";
+        private string systemDescription = "System description";
+        private string systemSerialNumber = "System serial number";
+        private string componentDescription = "Component description";
+        // Fields for table header
+        public string HdProperty = "Property";
+        public string HdName = "Header Name";
+        public string HdId = "Id";
+        
+
+        /// <summary>
+        /// Properties for Excel header
+        /// </summary>
+        public string SourceId                      { get => sourceId; set => sourceId = value; }
+        public string CreateDate                    { get => createDate; set => createDate = value; }
+        public string DefectivePartDescription      { get => defectivePartDescription; set => defectivePartDescription = value; }
+        public string ProblemDescription            { get => problemDescription; set => problemDescription = value; }
+        public string Conclusion                    { get => conclusion; set => conclusion = value; }
+        public string SystemDescription             { get => systemDescription; set => systemDescription = value; }
+        public string SystemSerialNumber            { get => systemSerialNumber; set => systemSerialNumber = value; }
+        public string ComponentDescription          { get => componentDescription; set => componentDescription = value; }
+        
+
+
 
         // protect the constructor to be used externally
         private ExcelHeaderConfig() { }
@@ -63,41 +84,49 @@ namespace ExcelHandler
 
         }
 
-        public DataTable GetFields()
+        public DataTable GetProperties()
         {
             DataTable tbResult = new DataTable("ExcelHeaderConfig");
-            tbResult.Columns.Add("Field", typeof(System.String));
-            tbResult.Columns.Add("Name", typeof(System.String));
+            tbResult.Columns.Add(HdId, typeof(System.Int32));
+            tbResult.Columns.Add(HdProperty, typeof(System.String));
+            tbResult.Columns.Add(HdName, typeof(System.String));
 
             Type type = this.GetType();
-            FieldInfo[] fieldInfo = type.GetFields();
+            PropertyInfo[] propertyInfos = type.GetProperties();
 
             DataRow dr = null;
-            foreach (FieldInfo f in fieldInfo)
+            int id = 1;
+            foreach (PropertyInfo f in propertyInfos)
             {
-                if (f.Name == "Instance") continue;
                 dr = tbResult.Rows.Add();
-                dr[0] = f.Name;
-                dr[1] = f.GetValue(this) as string;
+                dr[0] = id++;
+                dr[1] = f.Name;
+                dr[2] = f.GetValue(this) as string;
             }
 
             return tbResult;
         }
 
-        public void SelfSerialized(string filePath="header.hdconfig")
+        public void SetProperties(DataTable tb)
         {
-            Stream steam = File.Open(filePath, FileMode.Create);
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(steam, this);
-            steam.Close();
-        }
+            if (tb.Columns.Count != 3) throw new Exception("The input datatable has wrong format!");
 
-        public void SelfDeSerialized(string filePath="Header.config")
-        {
-            Stream steam = File.Open(filePath, FileMode.Open);
-            BinaryFormatter bf2 = new BinaryFormatter();
-            Instance = (ExcelHeaderConfig)bf2.Deserialize(steam);
-            steam.Close();
+            Type type = this.GetType();
+            PropertyInfo[] propertyInfos = type.GetProperties();
+
+            //get property name list
+            List<string> pNames = new List<string>();
+            foreach(PropertyInfo p in propertyInfos)
+            {
+                pNames.Add(p.Name);
+            }
+
+            foreach (DataRow r in tb.Rows)
+            {
+                if (!pNames.Contains(r[1].ToString())) continue;
+                PropertyInfo p = type.GetProperty(r[1].ToString());
+                p.SetValue(this, r[2].ToString());
+            }
         }
     }
 }

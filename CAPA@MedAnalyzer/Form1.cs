@@ -59,7 +59,17 @@ namespace CAPA_MedAnalyzer
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 InputFileName = dialog.FileName;
-                Ncm = new CapaSsme(InputFileName, 1, ConfigFilePath);
+                try
+                {
+                    Ncm = new CapaSsme(InputFileName, 1, ConfigFilePath);
+                }
+                catch(Exception ex)
+                {
+                    TbLog.Text += dialog.FileName + " Not Initialized!\r\n" + ex.Message.ToString() + "\r\n";
+                    TbLog.Text += "Normally, this is caused by unmatched excel headers to the header configuration.";
+                    return;
+                }
+                
                 TbLog.Text += dialog.FileName + "Inited!\r\n" + "Data is init:" + Ncm.IsInitDone.ToString() + "\r\n";
             }
             else return;

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using ExcelHandler;
 
 namespace CAPA_MedAnalyzer
@@ -14,13 +15,18 @@ namespace CAPA_MedAnalyzer
     public partial class Form2 : Form
     {
         ExcelHeaderConfig RawExcelHeader = ExcelHeaderConfig.GetInstance();
+        DataTable TableProperties;
+        XmlDictHelper XmlHeader = new XmlDictHelper();
         private string CurrentPath;
+
 
         public Form2()
         {
             CurrentPath = Application.StartupPath;
             InitializeComponent();
-            DgvExcelHenderConfig.DataSource = RawExcelHeader.GetFields();
+            TableProperties = RawExcelHeader.GetProperties();
+            XmlHeader.UpdateDictByDataTable(TableProperties);
+            DgvExcelHenderConfig.DataSource = TableProperties;
             DgvExcelHenderConfig.AutoResizeColumns();
         }
 
@@ -41,7 +47,7 @@ namespace CAPA_MedAnalyzer
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 string filename = dialog.FileName;
-                RawExcelHeader.SelfSerialized(filename);
+                XmlHeader.SaveXml(filename);
             }
             else return;
         }
@@ -60,11 +66,29 @@ namespace CAPA_MedAnalyzer
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 string filename = dialog.FileName;
-                RawExcelHeader.SelfDeSerialized(filename);
+                try
+                {
+                    XmlHeader.ReadFileToFillDictionary(filename);
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message.ToString());
+                    return;
+                }
+                
+                TableProperties = XmlHeader.DictToDataTable();
+                RawExcelHeader.SetProperties(TableProperties);
             }
             else return;
-            DgvExcelHenderConfig.DataSource = RawExcelHeader.GetFields();
+            DgvExcelHenderConfig.DataSource = TableProperties;
             DgvExcelHenderConfig.AutoResizeColumns();
         }
+
+        private void DgvExcelHenderConfig_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            RawExcelHeader.SetProperties(TableProperties);
+            XmlHeader.UpdateDictByDataTable(TableProperties);
+        }
+
     }
 }

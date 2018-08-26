@@ -435,19 +435,27 @@ namespace ExcelHandler
             string tempProductNameNormal;
             DateTime tempDateTime;
             // the local r is a reference, so changing r will change NCMDataTable.Table.Rows
-            foreach (DataRow r in NcmDataTable.Table.Rows)
+            try
             {
-                // make the new colum for normalized name
-                tempProductNameNormal = r[RawExcelHeader.SystemDescription].ToString().ToUpper();
-                tempProductNameNormal = NormalizeString(tempProductNameNormal);
-                r[ExHdSystemDescriptionNormalized] = tempProductNameNormal;
-                // make the new colum for split week
-                tempDateTime = DateTime.ParseExact(r[RawExcelHeader.CreateDate].ToString(), "yyyy-MM-dd HH:mm",
-                                       System.Globalization.CultureInfo.InvariantCulture);
-                r[ExHdWeek] = JudgeWeekSpliter(tempDateTime, DateTime.Now);
-                // make the new coum for month format with yyyy.mm which is a float number
-                r[ExHdMonth] = tempDateTime.Year + tempDateTime.Month * 0.01;
+                foreach (DataRow r in NcmDataTable.Table.Rows)
+                {
+                    // make the new colum for normalized name
+                    tempProductNameNormal = r[RawExcelHeader.SystemDescription].ToString().ToUpper();
+                    tempProductNameNormal = NormalizeString(tempProductNameNormal);
+                    r[ExHdSystemDescriptionNormalized] = tempProductNameNormal;
+                    // make the new colum for split week
+                    tempDateTime = DateTime.ParseExact(r[RawExcelHeader.CreateDate].ToString(), "yyyy-MM-dd HH:mm",
+                                           System.Globalization.CultureInfo.InvariantCulture);
+                    r[ExHdWeek] = JudgeWeekSpliter(tempDateTime, DateTime.Now);
+                    // make the new coum for month format with yyyy.mm which is a float number
+                    r[ExHdMonth] = tempDateTime.Year + tempDateTime.Month * 0.01;
+                }
             }
+            catch(Exception ex)
+            {
+                throw (ex);
+            }
+            
             // analyze the normlized product name and remove dedunt
             foreach (DataRow r in NcmDataTable.Table.Rows)
             {

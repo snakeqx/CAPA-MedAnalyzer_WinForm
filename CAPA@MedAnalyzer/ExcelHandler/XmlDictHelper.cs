@@ -94,7 +94,7 @@ namespace ExcelHandler
         /// </summary>
         /// <returns><c>true</c>, if file to fill dictionary was  read, <c>false</c> otherwise.</returns>
         /// <param name="filePath">File path.</param>
-        protected bool ReadFileToFillDictionary(string filePath)
+        public bool ReadFileToFillDictionary(string filePath)
         {
             XmlDocument xmlDoc = new XmlDocument();
             try
@@ -148,7 +148,7 @@ namespace ExcelHandler
             foreach(DataRow row in dt.Rows)
             {
                 if (row[2].ToString().Trim() == "") continue;
-                AddData(row[1].ToString().ToUpper(), row[2].ToString().ToUpper());
+                AddData(row[1].ToString(), row[2].ToString());   
             }
         }
         #endregion

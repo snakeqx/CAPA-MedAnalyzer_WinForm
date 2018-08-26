@@ -49,6 +49,7 @@
             this.DgvExcelHenderConfig.Size = new System.Drawing.Size(800, 425);
             this.DgvExcelHenderConfig.TabIndex = 0;
             this.DgvExcelHenderConfig.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.DgvExcelHenderConfig_CellBeginEdit);
+            this.DgvExcelHenderConfig.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.DgvExcelHenderConfig_CellEndEdit);
             // 
             // menuStrip1
             // 
@@ -72,14 +73,14 @@
             // saveConfigToolStripMenuItem
             // 
             this.saveConfigToolStripMenuItem.Name = "saveConfigToolStripMenuItem";
-            this.saveConfigToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveConfigToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.saveConfigToolStripMenuItem.Text = "Save Config";
             this.saveConfigToolStripMenuItem.Click += new System.EventHandler(this.saveConfigToolStripMenuItem_Click);
             // 
             // readConfigToolStripMenuItem
             // 
             this.readConfigToolStripMenuItem.Name = "readConfigToolStripMenuItem";
-            this.readConfigToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.readConfigToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             this.readConfigToolStripMenuItem.Text = "Read Config";
             this.readConfigToolStripMenuItem.Click += new System.EventHandler(this.readConfigToolStripMenuItem_Click);
             // 
